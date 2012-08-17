@@ -21,6 +21,13 @@
             "exprlib": "src/"
         }
     },
+    "require-dev": {
+        "mageekguy/atoum": "master"
+    },
+    "config": {
+        "bin-dir": "bin"
+    },
+    "minimum-stability": "dev",
     "extra": {
         "branch-alias": {
             "dev-master": "1.0.x-dev"

@@ -2,6 +2,10 @@
 
 namespace exprlib;
 
+use exprlib\contexts\IfContext;
+use exprlib\contexts\Scope;
+use exprlib\exceptions\ParseTreeNotFoundException;
+
 /**
  * this model handles the tokenizing, the context stack functions, and
  * the parsing (token list to tree trans).
@@ -51,7 +55,7 @@ class Parser
     public function parse()
     {
         # this is the global scope which will contain the entire tree
-        $this->push_context(new \exprlib\contexts\Scope());
+        $this->push_context(new Scope());
         foreach ($this->_tokens as $token) {
             # get the last context model from the context stack,
             # and have it handle the next token
@@ -65,7 +69,7 @@ class Parser
     public function evaluate()
     {
         if (!$this->_tree) {
-            throw new \exprlib\exceptions\ParseTreeNotFoundException();
+            throw new ParseTreeNotFoundException();
         }
 
         return $this->_tree->evaluate();
@@ -97,10 +101,10 @@ class Parser
      * from the stack.
      *******************************************************/
 
-    public function push_context(\exprlib\contexts\IfContext $context)
+    public function push_context(IfContext $context)
     {
-        array_push( $this->_context_stack, $context );
-        $this->get_context()->set_builder( $this );
+        array_push($this->_context_stack, $context);
+        $this->get_context()->set_builder($this);
     }
 
     public function pop_context()

@@ -1,7 +1,12 @@
 <?php
+
 namespace exprlib\contexts;
 
-class Scope implements namespace\IfContext
+use exprlib\Parser;
+use exprlib\exceptions\OutOfScopeException;
+use exprlib\exceptions\UnknownTokenException;
+
+class Scope implements IfContext
 {
     protected $_builder = null;
     protected $_children_contexts = array();
@@ -17,7 +22,7 @@ class Scope implements namespace\IfContext
     const T_TAN_SCOPE_OPEN = 7;
     const T_SQRT_SCOPE_OPEN = 8;
 
-    public function set_builder(\exprlib\Parser $builder)
+    public function set_builder(Parser $builder)
     {
         $this->_builder = $builder;
     }
@@ -42,15 +47,23 @@ class Scope implements namespace\IfContext
     {
         $type = null;
 
-        if (in_array( $token, array('*','/','+','-','^') )) $type = self::T_OPERATOR;
-        if ($token === ')') $type = self::T_SCOPE_CLOSE;
-        if ($token === '(' ) $type = self::T_SCOPE_OPEN;
-        if ($token === 'sin(' ) $type = self::T_SIN_SCOPE_OPEN;
-        if ($token === 'cos(' ) $type = self::T_COS_SCOPE_OPEN;
-        if ($token === 'tan(' ) $type = self::T_TAN_SCOPE_OPEN;
-        if ($token === 'sqrt(' ) $type = self::T_SQRT_SCOPE_OPEN;
+        if (in_array( $token, array('*','/','+','-','^') )) {
+            $type = self::T_OPERATOR;
+        } elseif ($token === ')') {
+            $type = self::T_SCOPE_CLOSE;
+        } elseif ($token === '(' ) {
+            $type = self::T_SCOPE_OPEN;
+        } elseif ($token === 'sin(' ) {
+            $type = self::T_SIN_SCOPE_OPEN;
+        } elseif ($token === 'cos(' ) {
+            $type = self::T_COS_SCOPE_OPEN;
+        } elseif ($token === 'tan(' ) {
+            $type = self::T_TAN_SCOPE_OPEN;
+        } elseif ($token === 'sqrt(' ) {
+            $type = self::T_SQRT_SCOPE_OPEN;
+        }
 
-        if (is_null($type)) {
+        if (null === $type) {
             if (is_numeric($token)) {
                 $type = self::T_NUMBER;
                 $token = (float) $token;
@@ -63,31 +76,31 @@ class Scope implements namespace\IfContext
                 $this->_operations[] = $token;
             break;
             case self::T_SCOPE_OPEN:
-                $this->_builder->push_context(new namespace\Scope());
+                $this->_builder->push_context(new Scope());
             break;
             case self::T_SIN_SCOPE_OPEN:
-                $this->_builder->push_context(new namespace\SineScope());
+                $this->_builder->push_context(new SinScope());
             break;
             case self::T_COS_SCOPE_OPEN:
-                $this->_builder->push_context(new namespace\CosineScope());
+                $this->_builder->push_context(new CosinScope());
             break;
             case self::T_TAN_SCOPE_OPEN:
-                $this->_builder->push_context(new namespace\TangentScope());
+                $this->_builder->push_context(new TangentScope());
             break;
             case self::T_SQRT_SCOPE_OPEN:
-                $this->_builder->push_context(new namespace\SqrtScope());
+                $this->_builder->push_context(new SqrtScope());
             break;
             case self::T_SCOPE_CLOSE:
                 $scope_operation = $this->_builder->pop_context();
                 $new_context = $this->_builder->get_context();
                 if (is_null($scope_operation) || (!$new_context)) {
                     # this means there are more closing parentheses than openning
-                    throw new \exprlib\exceptions\OutOfScopeException();
+                    throw new OutOfScopeException();
                 }
                 $new_context->add_operation($scope_operation);
             break;
             default:
-                throw new \exprlib\exceptions\UnknownTokenException($token);
+                throw new UnknownTokenException($token);
             break;
         }
     }
@@ -102,7 +115,9 @@ class Scope implements namespace\IfContext
     protected function _expression_loop(&$operation_list)
     {
         while (list($i, $operation) = each ($operation_list)) {
-            if (!in_array($operation, array('^','*','/','+','-'))) continue;
+            if (!in_array($operation, array('^','*','/','+','-'))) {
+                continue;
+            }
 
             $left =  isset($operation_list[$i - 1]) ? (float) $operation_list[$i - 1] : null;
             $right = isset($operation_list[$i + 1]) ? (float) $operation_list[$i + 1] : null;
@@ -138,7 +153,11 @@ class Scope implements namespace\IfContext
                 reset($operation_list = array_values($operation_list));
             }
         }
-        if (count($operation_list) === 1) return end($operation_list);
+
+        if (count($operation_list) === 1) {
+            return end($operation_list);
+        }
+
         return false;
     }
 
@@ -160,7 +179,11 @@ class Scope implements namespace\IfContext
         while (true) {
             $operation_check = $operation_list;
             $result = $this->_expression_loop($operation_list);
-            if ($result !== false) return $result;
+
+            if ($result !== false) {
+                return $result;
+            }
+
             if ($operation_check === $operation_list) {
                 break;
             } else {
