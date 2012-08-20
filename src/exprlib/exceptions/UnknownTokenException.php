@@ -2,6 +2,6 @@
 
 namespace exprlib\exceptions;
 
-class UnknownTokenException
+class UnknownTokenException extends \Exception
 {
 }
