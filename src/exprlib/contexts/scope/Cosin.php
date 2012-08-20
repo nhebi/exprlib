@@ -1,13 +1,13 @@
 <?php
 
-namespace exprlib\contexts;
+namespace exprlib\contexts\scope;
 
-class CosinScope extends Scope
+use exprlib\contexts\Scope;
+
+class Cosin extends Scope
 {
     public function evaluate()
     {
-        exit('@todo');
-
         return cos(deg2rad(parent::evaluate()));
     }
 }

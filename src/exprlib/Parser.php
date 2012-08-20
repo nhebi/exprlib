@@ -12,6 +12,9 @@ use exprlib\contexts\Scope;
  */
 class Parser
 {
+    public $precision = 15;
+    public $precisionType = null;
+
     protected $content;
     protected $contextStack = array();
     protected $tree;
@@ -31,14 +34,18 @@ class Parser
      * Allow user to simplify evaluation
      * Parser::build('2+1')->evaluate();
      *
-     * @param string $content content
+     * @param string  $content       content
+     * @param string  $precision     precision
+     * @param integer $precisionType precisionType
      *
      * @return Parser
      */
-    public static function build($content)
+    public static function build($content, $precision = 15, $precisionType = PHP_ROUND_HALF_UP)
     {
         $instance = new static();
         $instance->setContent($content);
+        $instance->precision = $precision;
+        $instance->precisionType = $precisionType;
 
         return $instance;
     }
@@ -57,7 +64,7 @@ class Parser
         $this->content = str_replace('**', '^', $this->content);
         $this->content = str_replace('PI', (string) PI(), $this->content);
         $this->tokens = preg_split(
-            '@([\d\.]+)|(sin\(|cos\(|tan\(|sqrt\(|\+|\-|\*|/|\^|\(|\))@',
+            '@([\d\.]+)|(sin\(|log\(|ln\(|pow\(|exp\(|cos\(|tan\(|sqrt\(|\+|\-|\*|/|\^|\(|\))@i',
             $this->content,
             null,
             PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY
@@ -90,7 +97,7 @@ class Parser
             $this->parse();
         }
 
-        return $this->tree->evaluate();
+        return round($this->tree->evaluate(), $this->precision, $this->precisionType);
     }
 
     /*** accessors and mutators ***/

@@ -5,6 +5,8 @@ An expression parser in PHP, code taken on [codehackit](http://codehackit.blogsp
 
 # Todo
 
-- Create contexts
-- Define IfContext
+List of contexts to support (contribute or add here):
 
+- log
+- pow
+- exp

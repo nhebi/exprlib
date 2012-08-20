@@ -3,33 +3,26 @@
 namespace exprlib\contexts;
 
 use exprlib\Parser;
+use exprlib\exceptions\DivisionByZeroException;
 use exprlib\exceptions\OutOfScopeException;
 use exprlib\exceptions\UnknownTokenException;
+use exprlib\contexts\scope;
 
 class Scope implements IfContext
 {
-    protected $builder = null;
+    protected $builder;
     protected $childrenContexts = array();
-    protected $rawContent = array();
+    protected $content;
     protected $operations = array();
 
-    const T_NUMBER = 1;
-    const T_OPERATOR = 2;
-    const T_SCOPE_OPEN = 3;
-    const T_SCOPE_CLOSE = 4;
-    const T_SIN_SCOPE_OPEN = 5;
-    const T_COS_SCOPE_OPEN = 6;
-    const T_TAN_SCOPE_OPEN = 7;
-    const T_SQRT_SCOPE_OPEN = 8;
+    public function __construct($content = null)
+    {
+        $this->content = $content;
+    }
 
     public function setBuilder(Parser $builder)
     {
         $this->builder = $builder;
-    }
-
-    public function __toString()
-    {
-        return implode('', $this->rawContent);
     }
 
     public function addOperation($operation)
@@ -45,63 +38,43 @@ class Scope implements IfContext
      */
     public function handleToken($token)
     {
-        $type = null;
+        $baseToken = $token;
+        $token     = strtolower($token);
 
-        if (in_array( $token, array('*','/','+','-','^') )) {
-            $type = self::T_OPERATOR;
+        if (in_array($token, array('*','/','+','-','^'), true)) {
+            $this->operations[] = $token;
+        } elseif ($token === '(') {
+            $this->builder->pushContext(new Scope($token));
         } elseif ($token === ')') {
-            $type = self::T_SCOPE_CLOSE;
-        } elseif ($token === '(' ) {
-            $type = self::T_SCOPE_OPEN;
-        } elseif ($token === 'sin(' ) {
-            $type = self::T_SIN_SCOPE_OPEN;
-        } elseif ($token === 'cos(' ) {
-            $type = self::T_COS_SCOPE_OPEN;
-        } elseif ($token === 'tan(' ) {
-            $type = self::T_TAN_SCOPE_OPEN;
-        } elseif ($token === 'sqrt(' ) {
-            $type = self::T_SQRT_SCOPE_OPEN;
-        }
 
-        if (null === $type) {
-            if (is_numeric($token)) {
-                $type = self::T_NUMBER;
-                $token = (float) $token;
+            $scopeOperation = $this->builder->popContext();
+            $newContext     = $this->builder->getContext();
+            if (is_null($scopeOperation) || (!$newContext)) {
+                # this means there are more closing parentheses than openning
+                throw new OutOfScopeException('It misses an open scope');
             }
-        }
+            $newContext->addOperation($scopeOperation);
 
-        switch ($type) {
-            case self::T_NUMBER:
-            case self::T_OPERATOR:
-                $this->operations[] = $token;
-                break;
-            case self::T_SCOPE_OPEN:
-                $this->builder->pushContext(new Scope());
-                break;
-            case self::T_SIN_SCOPE_OPEN:
-                $this->builder->pushContext(new SinScope());
-                break;
-            case self::T_COS_SCOPE_OPEN:
-                $this->builder->pushContext(new CosinScope());
-                break;
-            case self::T_TAN_SCOPE_OPEN:
-                $this->builder->pushContext(new TangentScope());
-                break;
-            case self::T_SQRT_SCOPE_OPEN:
-                $this->builder->pushContext(new SqrtScope());
-                break;
-            case self::T_SCOPE_CLOSE:
-                $scopeOperation = $this->builder->popContext();
-                $newContext = $this->builder->getContext();
-                if (is_null($scopeOperation) || (!$newContext)) {
-                    # this means there are more closing parentheses than openning
-                    throw new OutOfScopeException();
-                }
-                $newContext->addOperation($scopeOperation);
-                break;
-            default:
-                throw new UnknownTokenException($token);
-                break;
+        } elseif ($token === 'sin(') {
+            $this->builder->pushContext(new scope\Sin($token));
+        } elseif ($token === 'cos(') {
+            $this->builder->pushContext(new scope\Cosin($token));
+        } elseif ($token === 'tan(') {
+            $this->builder->pushContext(new scope\Tangent($token));
+        } elseif ($token === 'sqrt(') {
+            $this->builder->pushContext(new scope\Sqrt($token));
+        } elseif ($token === 'log(' || $token === 'ln(') {
+            $this->builder->pushContext(new scope\Log($token));
+        } elseif ($token === 'pow(') {
+            $this->builder->pushContext(new scope\Pow($token));
+        } elseif ($token === 'exp(') {
+            $this->builder->pushContext(new scope\Exp($token));
+        } else {
+            if (is_numeric($token)) {
+                $this->operations[] = (float) $token;
+            } else {
+                throw new UnknownTokenException(sprintf('"%s" is not supported yet', $baseToken));
+            }
         }
     }
 
@@ -112,25 +85,25 @@ class Scope implements IfContext
      * - mult/divi, second order
      * - addi/subt, third order
      */
-    protected function expressionLoop(&$operationList)
+    protected function expressionLoop()
     {
-        while (list($i, $operation) = each ($operationList)) {
-            if (!in_array($operation, array('^','*','/','+','-'))) {
+        while (list($i, $operation) = each ($this->operations)) {
+            if (!in_array($operation, array('^','*','/','+','-'), true)) {
                 continue;
             }
 
-            $left =  isset($operationList[$i - 1]) ? (float) $operationList[$i - 1] : null;
-            $right = isset($operationList[$i + 1]) ? (float) $operationList[$i + 1] : null;
+            $left =  isset($this->operations[$i - 1]) ? (float) $this->operations[$i - 1] : null;
+            $right = isset($this->operations[$i + 1]) ? (float) $this->operations[$i + 1] : null;
 
-            $firstOrder = (in_array('^', $operationList));
-            $secondOrder = (in_array('*', $operationList) || in_array('/', $operationList));
-            $thirdOrder = (in_array('-', $operationList) || in_array('+', $operationList));
+            $firstOrder = (in_array('^', $this->operations, true));
+            $secondOrder = (in_array('*', $this->operations, true) || in_array('/', $this->operations, true));
+            $thirdOrder = (in_array('-', $this->operations, true) || in_array('+', $this->operations, true));
 
             $removeSides = true;
             if ($firstOrder) {
                 switch ($operation) {
                     case '^':
-                        $operationList[$i] = pow((float) $left, (float) $right);
+                        $this->operations[$i] = pow((float) $left, (float) $right);
                         break;
                     default:
                         $removeSides = false;
@@ -139,10 +112,15 @@ class Scope implements IfContext
             } elseif ($secondOrder) {
                 switch ($operation) {
                     case '*':
-                        $operationList[ $i ] = (float) ($left * $right);
+                        $this->operations[$i] = (float) ($left * $right);
                         break;
                     case '/':
-                        $operationList[ $i ] = (float) ($left / $right);
+
+                        if ($right == 0) {
+                            throw new DivisionByZeroException();
+                        }
+
+                        $this->operations[$i] = (float) ($left / $right);
                         break;
                     default:
                         $removeSides = false;
@@ -151,10 +129,10 @@ class Scope implements IfContext
             } elseif ($thirdOrder) {
                 switch ($operation) {
                     case '+':
-                        $operationList[ $i ] = (float) ($left + $right);
+                        $this->operations[ $i ] = (float) ($left + $right);
                         break;
                     case '-':
-                        $operationList[ $i ] = (float) ($left - $right);
+                        $this->operations[ $i ] = (float) ($left - $right);
                         break;
                     default:
                         $removeSides = false;
@@ -163,13 +141,14 @@ class Scope implements IfContext
             }
 
             if ($removeSides) {
-                unset($operationList[$i+1], $operationList[$i-1]);
-                reset($operationList = array_values($operationList));
+                unset($this->operations[$i+1], $this->operations[$i-1]);
+                $this->operations = array_values($this->operations);
+                reset($this->operations);
             }
         }
 
-        if (count($operationList) === 1) {
-            return end($operationList);
+        if (count($this->operations) === 1) {
+            return end($this->operations);
         }
 
         return false;
@@ -192,7 +171,7 @@ class Scope implements IfContext
 
         while (true) {
             $operationCheck = $operationList;
-            $result = $this->expressionLoop($operationList);
+            $result = $this->expressionLoop();
 
             if ($result !== false) {
                 return $result;

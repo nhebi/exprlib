@@ -1,8 +1,10 @@
 <?php
 
-namespace exprlib\contexts;
+namespace exprlib\contexts\scope;
 
-class SqrtScope extends Scope
+use exprlib\contexts\Scope;
+
+class Sqrt extends Scope
 {
     public function evaluate()
     {
