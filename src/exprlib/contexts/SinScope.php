@@ -2,7 +2,7 @@
 
 namespace exprlib\contexts;
 
-class SinScope extends namespace\Scope
+class SinScope extends Scope
 {
     public function evaluate()
     {

@@ -2,7 +2,7 @@
 
 namespace exprlib\contexts;
 
-class SqrtScope extends namespace\Scope
+class SqrtScope extends Scope
 {
     public function evaluate()
     {
