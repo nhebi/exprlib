@@ -52,7 +52,7 @@ ParserModel::build('exp(12)')->evaluate(); // 162754.79142
 ParserModel::build('exp(5.7)')->evaluate(); // 298.8674
 ParserModel::build('sum(10, 20, 30)')->evaluate(); // 60
 ParserModel::build('avg(10, 20, 30)')->evaluate(); // 20
-ParserModel::build('log(0)'')->evaluate(); // -INF
+ParserModel::build('log(0)')->evaluate(); // -INF
 ParserModel::build('log(0)*-1')->evaluate(); // INF
 ParserModel::build(sprintf('acos(%s)', rad2deg(8))->evaluate(); // NAN
 ```
