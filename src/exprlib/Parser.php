@@ -4,7 +4,6 @@ namespace exprlib;
 
 use exprlib\contexts\IfContext;
 use exprlib\contexts\Scope;
-use exprlib\exceptions\ParseTreeNotFoundException;
 
 /**
  * this model handles the tokenizing, the context stack functions, and
@@ -13,16 +12,35 @@ use exprlib\exceptions\ParseTreeNotFoundException;
  */
 class Parser
 {
-    protected $_content = null;
-    protected $_context_stack = array();
-    protected $_tree = null;
-    protected $_tokens = array();
+    protected $content;
+    protected $contextStack = array();
+    protected $tree;
+    protected $tokens = array();
 
+    /**
+     * @param string $content content
+     */
     public function __construct($content = null)
     {
-        if ($content) {
-            $this->set_content($content);
+        if (null !== $content) {
+            $this->setContent($content);
         }
+    }
+
+    /**
+     * Allow user to simplify evaluation
+     * Parser::build('2+1')->evaluate();
+     *
+     * @param string $content content
+     *
+     * @return Parser
+     */
+    public static function build($content)
+    {
+        $instance = new static();
+        $instance->setContent($content);
+
+        return $instance;
     }
 
     /**
@@ -35,12 +53,12 @@ class Parser
      */
     public function tokenize()
     {
-        $this->_content = str_replace(array("\n","\r","\t"," "), '', $this->_content);
-        $this->_content = str_replace('**', '^', $this->_content);
-        $this->_content = str_replace('PI', (string) PI(), $this->_content);
-        $this->_tokens = preg_split(
+        $this->content = str_replace(array("\n","\r","\t"," "), '', $this->content);
+        $this->content = str_replace('**', '^', $this->content);
+        $this->content = str_replace('PI', (string) PI(), $this->content);
+        $this->tokens = preg_split(
             '@([\d\.]+)|(sin\(|cos\(|tan\(|sqrt\(|\+|\-|\*|/|\^|\(|\))@',
-            $this->_content,
+            $this->content,
             null,
             PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY
         );
@@ -55,43 +73,47 @@ class Parser
     public function parse()
     {
         # this is the global scope which will contain the entire tree
-        $this->push_context(new Scope());
-        foreach ($this->_tokens as $token) {
+        $this->pushContext(new Scope());
+        foreach ($this->tokens as $token) {
             # get the last context model from the context stack,
             # and have it handle the next token
-            $this->get_context()->handle_token($token);
+            $this->getContext()->handleToken($token);
         }
-        $this->_tree = $this->pop_context();
+        $this->tree = $this->popContext();
 
         return $this;
     }
 
     public function evaluate()
     {
-        if (!$this->_tree) {
-            throw new ParseTreeNotFoundException();
+        if (!$this->tree) {
+            $this->parse();
         }
 
-        return $this->_tree->evaluate();
+        return $this->tree->evaluate();
     }
 
     /*** accessors and mutators ***/
 
-    public function get_tree()
+    public function getTree()
     {
-        return $this->_tree;
+        return $this->tree;
     }
 
-    public function set_content($content = null)
+    public function setContent($content)
     {
-        $this->_content = $content;
+        $this->content = $content;
+        // tokenize the content
+        $this->tokenize();
+        // clear tree
+        $this->tree = null;
 
         return $this;
     }
 
-    public function get_tokens()
+    public function getTokens()
     {
-        return $this->_tokens;
+        return $this->tokens;
     }
 
     /*******************************************************
@@ -101,19 +123,19 @@ class Parser
      * from the stack.
      *******************************************************/
 
-    public function push_context(IfContext $context)
+    public function pushContext(IfContext $context)
     {
-        array_push($this->_context_stack, $context);
-        $this->get_context()->set_builder($this);
+        array_push($this->contextStack, $context);
+        $this->getContext()->setBuilder($this);
     }
 
-    public function pop_context()
+    public function popContext()
     {
-        return array_pop($this->_context_stack);
+        return array_pop($this->contextStack);
     }
 
-    public function get_context()
+    public function getContext()
     {
-        return end($this->_context_stack);
+        return end($this->contextStack);
     }
 }

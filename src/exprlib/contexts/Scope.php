@@ -8,10 +8,10 @@ use exprlib\exceptions\UnknownTokenException;
 
 class Scope implements IfContext
 {
-    protected $_builder = null;
-    protected $_children_contexts = array();
-    protected $_raw_content = array();
-    protected $_operations = array();
+    protected $builder = null;
+    protected $childrenContexts = array();
+    protected $rawContent = array();
+    protected $operations = array();
 
     const T_NUMBER = 1;
     const T_OPERATOR = 2;
@@ -22,19 +22,19 @@ class Scope implements IfContext
     const T_TAN_SCOPE_OPEN = 7;
     const T_SQRT_SCOPE_OPEN = 8;
 
-    public function set_builder(Parser $builder)
+    public function setBuilder(Parser $builder)
     {
-        $this->_builder = $builder;
+        $this->builder = $builder;
     }
 
     public function __toString()
     {
-        return implode('', $this->_raw_content);
+        return implode('', $this->rawContent);
     }
 
-    public function add_operation($operation)
+    public function addOperation($operation)
     {
-        $this->_operations[] = $operation;
+        $this->operations[] = $operation;
     }
 
     /**
@@ -43,7 +43,7 @@ class Scope implements IfContext
      * to push a new context on the the context stack, or pop a context off the
      * stack.
      */
-    public function handle_token($token)
+    public function handleToken($token)
     {
         $type = null;
 
@@ -73,35 +73,35 @@ class Scope implements IfContext
         switch ($type) {
             case self::T_NUMBER:
             case self::T_OPERATOR:
-                $this->_operations[] = $token;
-            break;
+                $this->operations[] = $token;
+                break;
             case self::T_SCOPE_OPEN:
-                $this->_builder->push_context(new Scope());
-            break;
+                $this->builder->pushContext(new Scope());
+                break;
             case self::T_SIN_SCOPE_OPEN:
-                $this->_builder->push_context(new SinScope());
-            break;
+                $this->builder->pushContext(new SinScope());
+                break;
             case self::T_COS_SCOPE_OPEN:
-                $this->_builder->push_context(new CosinScope());
-            break;
+                $this->builder->pushContext(new CosinScope());
+                break;
             case self::T_TAN_SCOPE_OPEN:
-                $this->_builder->push_context(new TangentScope());
-            break;
+                $this->builder->pushContext(new TangentScope());
+                break;
             case self::T_SQRT_SCOPE_OPEN:
-                $this->_builder->push_context(new SqrtScope());
-            break;
+                $this->builder->pushContext(new SqrtScope());
+                break;
             case self::T_SCOPE_CLOSE:
-                $scope_operation = $this->_builder->pop_context();
-                $new_context = $this->_builder->get_context();
-                if (is_null($scope_operation) || (!$new_context)) {
+                $scopeOperation = $this->builder->popContext();
+                $newContext = $this->builder->getContext();
+                if (is_null($scopeOperation) || (!$newContext)) {
                     # this means there are more closing parentheses than openning
                     throw new OutOfScopeException();
                 }
-                $new_context->add_operation($scope_operation);
-            break;
+                $newContext->addOperation($scopeOperation);
+                break;
             default:
                 throw new UnknownTokenException($token);
-            break;
+                break;
         }
     }
 
@@ -112,50 +112,64 @@ class Scope implements IfContext
      * - mult/divi, second order
      * - addi/subt, third order
      */
-    protected function _expression_loop(&$operation_list)
+    protected function expressionLoop(&$operationList)
     {
-        while (list($i, $operation) = each ($operation_list)) {
+        while (list($i, $operation) = each ($operationList)) {
             if (!in_array($operation, array('^','*','/','+','-'))) {
                 continue;
             }
 
-            $left =  isset($operation_list[$i - 1]) ? (float) $operation_list[$i - 1] : null;
-            $right = isset($operation_list[$i + 1]) ? (float) $operation_list[$i + 1] : null;
+            $left =  isset($operationList[$i - 1]) ? (float) $operationList[$i - 1] : null;
+            $right = isset($operationList[$i + 1]) ? (float) $operationList[$i + 1] : null;
 
-            # if ( is_null( $left ) || is_null( $right ) ) throw new \Exception('syntax error');
+            $firstOrder = (in_array('^', $operationList));
+            $secondOrder = (in_array('*', $operationList) || in_array('/', $operationList));
+            $thirdOrder = (in_array('-', $operationList) || in_array('+', $operationList));
 
-            $first_order = (in_array('^', $operation_list));
-            $second_order = (in_array('*', $operation_list) || in_array('/', $operation_list));
-            $third_order = (in_array('-', $operation_list) || in_array('+', $operation_list));
-
-            $remove_sides = true;
-            if ($first_order) {
+            $removeSides = true;
+            if ($firstOrder) {
                 switch ($operation) {
-                    case '^': $operation_list[$i] = pow((float) $left, (float) $right); break;
-                    default: $remove_sides = false; break;
+                    case '^':
+                        $operationList[$i] = pow((float) $left, (float) $right);
+                        break;
+                    default:
+                        $removeSides = false;
+                        break;
                 }
-            } elseif ($second_order) {
+            } elseif ($secondOrder) {
                 switch ($operation) {
-                    case '*': $operation_list[ $i ] = (float) ($left * $right); break;
-                    case '/': $operation_list[ $i ] = (float) ($left / $right); break;
-                    default: $remove_sides = false; break;
+                    case '*':
+                        $operationList[ $i ] = (float) ($left * $right);
+                        break;
+                    case '/':
+                        $operationList[ $i ] = (float) ($left / $right);
+                        break;
+                    default:
+                        $removeSides = false;
+                        break;
                 }
-            } elseif ($third_order) {
+            } elseif ($thirdOrder) {
                 switch ($operation) {
-                    case '+': $operation_list[ $i ] = (float) ($left + $right); break;
-                    case '-': $operation_list[ $i ] = (float) ($left - $right); break;
-                    default: $remove_sides = false; break;
+                    case '+':
+                        $operationList[ $i ] = (float) ($left + $right);
+                        break;
+                    case '-':
+                        $operationList[ $i ] = (float) ($left - $right);
+                        break;
+                    default:
+                        $removeSides = false;
+                        break;
                 }
             }
 
-            if ($remove_sides) {
-                unset($operation_list[$i+1], $operation_list[$i-1]);
-                reset($operation_list = array_values($operation_list));
+            if ($removeSides) {
+                unset($operationList[$i+1], $operationList[$i-1]);
+                reset($operationList = array_values($operationList));
             }
         }
 
-        if (count($operation_list) === 1) {
-            return end($operation_list);
+        if (count($operationList) === 1) {
+            return end($operationList);
         }
 
         return false;
@@ -168,26 +182,26 @@ class Scope implements IfContext
     # evaluating all the sub scopes (recursivly):
     public function evaluate()
     {
-        foreach ($this->_operations as $i => $operation) {
-            if (is_object( $operation)) {
-                $this->_operations[$i] = $operation->evaluate();
+        foreach ($this->operations as $i => $operation) {
+            if (is_object($operation)) {
+                $this->operations[$i] = $operation->evaluate();
             }
         }
 
-        $operation_list = $this->_operations;
+        $operationList = $this->operations;
 
         while (true) {
-            $operation_check = $operation_list;
-            $result = $this->_expression_loop($operation_list);
+            $operationCheck = $operationList;
+            $result = $this->expressionLoop($operationList);
 
             if ($result !== false) {
                 return $result;
             }
 
-            if ($operation_check === $operation_list) {
+            if ($operationCheck === $operationList) {
                 break;
             } else {
-                reset($operation_list = array_values($operation_list));
+                reset($operationList = array_values($operationList));
             }
         }
         throw new \Exception('failed... here');

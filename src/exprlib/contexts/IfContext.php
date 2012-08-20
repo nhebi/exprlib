@@ -1,5 +1,6 @@
 <?php
-namespace src\exprlib\contexts;
+
+namespace exprlib\contexts;
 
 interface IfContext
 {
