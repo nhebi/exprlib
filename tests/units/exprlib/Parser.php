@@ -43,12 +43,19 @@ class Parser extends atoum\test
         $pi4 = M_PI_4;
 
         return array(
+            array('2+4/2+2', 6),
+            array('2+4/2', 4),
+            array('2+4/-2', 0),
+            array('2+-4/-2', 4),
+            array('2+-4*-2', 10),
             array('2+1', 3),
             array('2/1', 2),
             array('2/(3.6*8.5)', 0.06536),
             array('2+(6/2)+(8*3)', 29),
             array('2+3+6+6/2+3', 17),
             array('0.001 + 0.02', 0.021),
+            array('10*-2', -20),
+            array('-10*-2', 20),
             // OPERATIONS
             // cos
             array('COS(0)', 1),
@@ -83,6 +90,8 @@ class Parser extends atoum\test
             array('sum(10, 20, 30)', 60),
             // avg
             array('avg(10, 20, 30)', 20),
+            // special cases
+            array('log(0)', -INF),
         );
     }
 }

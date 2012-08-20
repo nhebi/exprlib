@@ -105,64 +105,92 @@ class Scope implements IfContext
      */
     protected function expressionLoop()
     {
+        //@todo refactorize that !
         while (list($i, $operation) = each ($this->operations)) {
-            if (!in_array($operation, array('^','*','/','+','-'), true)) {
+            $operators = array('^','/','*','+','-');
+            if (!in_array($operation, $operators, true)) {
                 continue;
             }
 
-            $left =  isset($this->operations[$i - 1]) ? (float) $this->operations[$i - 1] : null;
-            $right = isset($this->operations[$i + 1]) ? (float) $this->operations[$i + 1] : null;
-
-            $firstOrder = (in_array('^', $this->operations, true));
-            $secondOrder = (in_array('*', $this->operations, true) || in_array('/', $this->operations, true));
-            $thirdOrder = (in_array('-', $this->operations, true) || in_array('+', $this->operations, true));
-
-            $removeSides = true;
-            if ($firstOrder) {
-                switch ($operation) {
-                    case '^':
-                        $this->operations[$i] = pow((float) $left, (float) $right);
-                        break;
-                    default:
-                        $removeSides = false;
-                        break;
-                }
-            } elseif ($secondOrder) {
-                switch ($operation) {
-                    case '*':
-                        $this->operations[$i] = (float) ($left * $right);
-                        break;
-                    case '/':
-
-                        if ($right == 0) {
-                            throw new DivisionByZeroException();
-                        }
-
-                        $this->operations[$i] = (float) ($left / $right);
-                        break;
-                    default:
-                        $removeSides = false;
-                        break;
-                }
-            } elseif ($thirdOrder) {
-                switch ($operation) {
-                    case '+':
-                        $this->operations[$i] = (float) ($left + $right);
-                        break;
-                    case '-':
-                        $this->operations[$i] = (float) ($left - $right);
-                        break;
-                    default:
-                        $removeSides = false;
-                        break;
+            foreach ($operators as $operator) {
+                if (false !== $pos = array_search($operator, $this->operations, true)) {
+                    $mainOperator = $operator;
+                    break;
                 }
             }
 
-            if ($removeSides) {
-                unset($this->operations[$i+1], $this->operations[$i-1]);
-                $this->operations = array_values($this->operations);
-                reset($this->operations);
+            $before = array();
+            foreach ($this->operations as $key => $value) {
+                unset($this->operations[$key]);
+
+                if ($key == $pos) {
+                    break;
+                }
+                $before[] = $value;
             }
+
+            $end    = end($before);
+
+            $pos--;
+            if (prev($before) == '-' && in_array(prev($before), $operators)) {
+                $pos--;
+            }
+
+            $newStack = array();
+            $left  = array();
+            foreach ($before as $key => $value) {
+                if ($key >= $pos) {
+                    $left[] = $value;
+                } else {
+                    $newStack[] = $value;
+                }
+            }
+
+
+            $right = array();
+            foreach ($this->operations as $key => $value) {
+                unset($this->operations[$key]);
+                $right[] = $value;
+                if (is_numeric($value)) {
+                    break;
+                }
+            }
+
+            $left = implode('', $left);
+            $right = implode('', $right);
+
+            $result = null;
+            switch ($mainOperator) {
+                case '^':
+                    $result = pow((float) $left, (float) $right);
+                    break;
+                case '*':
+                    $result = (float) ($left * $right);
+                    break;
+                case '/':
+                    if ($right == 0) {
+                        throw new DivisionByZeroException();
+                    }
+
+                    $result = (float) ($left / $right);
+                    break;
+                case '-':
+                    $result = (float) ($left - $right);
+                    break;
+                case '+':
+                    $result = (float) ($left + $right);
+                    break;
+            }
+
+            if ($result) {
+                $newStack[] = $result;
+            }
+
+            foreach ($this->operations as $operation) {
+                $newStack[] = $operation;
+            }
+
+            $this->operations = $newStack;
         }
 
         if (count($this->operations) === 1) {
