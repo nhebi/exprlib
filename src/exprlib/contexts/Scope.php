@@ -112,6 +112,7 @@ class Scope implements IfContext
                 continue;
             }
 
+            // fetch main operator + position of it
             foreach ($operators as $operator) {
                 if (false !== $pos = array_search($operator, $this->operations, true)) {
                     $mainOperator = $operator;
@@ -129,9 +130,9 @@ class Scope implements IfContext
                 $before[] = $value;
             }
 
-            $end    = end($before);
-
+            end($before);
             $pos--;
+            // * - 10 must regroup -10 for next operation
             if (prev($before) == '-' && in_array(prev($before), $operators)) {
                 $pos--;
             }
@@ -146,7 +147,6 @@ class Scope implements IfContext
                 }
             }
 
-
             $right = array();
             foreach ($this->operations as $key => $value) {
                 unset($this->operations[$key]);
@@ -156,8 +156,8 @@ class Scope implements IfContext
                 }
             }
 
-            $left = implode('', $left);
-            $right = implode('', $right);
+            $left = count($left) == 1 ? current($left) : implode('', $left);
+            $right = count($right) == 1 ? current($right) : implode('', $right);
 
             $result = null;
             switch ($mainOperator) {

@@ -13,6 +13,6 @@ class Exp extends Scope
             throw new ParsingException('exp accept only one argument');
         }
 
-        return exp($result);
+        return (float) exp($result);
     }
 }

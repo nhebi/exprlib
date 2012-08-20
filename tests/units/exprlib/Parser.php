@@ -15,7 +15,7 @@ use exprlib\Parser as ParserModel;
  */
 class Parser extends atoum\test
 {
-    /*public function testExceptions()
+    public function testExceptions()
     {
         $this->exception(function() { ParserModel::build('ß2+1')->evaluate(); })
         ->isInstanceOf('exprlib\exceptions\UnknownTokenException')
@@ -27,7 +27,7 @@ class Parser extends atoum\test
 
         $this->exception(function() { ParserModel::build('2/0')->evaluate(); })
         ->isInstanceOf('exprlib\exceptions\DivisionByZeroException');
-    }*/
+    }
 
     /**
      * @dataProvider operationsDataProvider
@@ -92,6 +92,7 @@ class Parser extends atoum\test
             array('avg(10, 20, 30)', 20),
             // special cases
             array('log(0)', -INF),
+            array('log(0)*-1', INF),
         );
     }
 }
