@@ -93,6 +93,7 @@ class Parser extends atoum\test
             // special cases
             array('log(0)', -INF),
             array('log(0)*-1', INF),
+            array(sprintf('acos(%s)', rad2deg(8)), NAN)
         );
     }
 }

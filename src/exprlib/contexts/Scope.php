@@ -71,6 +71,8 @@ class Scope implements IfContext
 
         } elseif ($token === 'sin(') {
             $this->builder->pushContext(new scope\Sin($token));
+        } elseif ($token === 'acos(') {
+            $this->builder->pushContext(new scope\Acos($token));
         } elseif ($token === 'cos(') {
             $this->builder->pushContext(new scope\Cosin($token));
         } elseif ($token === 'sum(') {

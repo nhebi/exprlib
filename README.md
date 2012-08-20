@@ -8,6 +8,7 @@ An expression parser in PHP, code inspired from [codehackit](http://codehackit.b
 List of functions:
 
 - operators = * + -
+- acos
 - cos
 - sin
 - tan
@@ -51,6 +52,9 @@ ParserModel::build('exp(12)')->evaluate(); // 162754.79142
 ParserModel::build('exp(5.7)')->evaluate(); // 298.8674
 ParserModel::build('sum(10, 20, 30)')->evaluate(); // 60
 ParserModel::build('avg(10, 20, 30)')->evaluate(); // 20
+ParserModel::build('log(0)'')->evaluate(); // -INF
+ParserModel::build('log(0)*-1')->evaluate(); // INF
+ParserModel::build(sprintf('acos(%s)', rad2deg(8))->evaluate(); // NAN
 ```
 
 # Launch tests
@@ -59,5 +63,4 @@ Look at .travis.yml
 
 # Todo
 
-+ Deal with +inf, -inf, and NaN
 + Look at how is the best way to decouple Scope
