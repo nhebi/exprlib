@@ -64,3 +64,4 @@ Look at .travis.yml
 # Todo
 
 + Look at how is the best way to decouple Scope
++ Add tests
