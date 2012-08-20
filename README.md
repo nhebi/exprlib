@@ -3,7 +3,7 @@ exprlib - PHP
 
 [![Build Status](https://secure.travis-ci.org/rezzza/exprlib.png)](http://travis-ci.org/rezzza/exprlib)
 
-An expression parser in PHP, code taken on [codehackit](http://codehackit.blogspot.fr/2011/08/expression-parser-in-php.html)
+An expression parser in PHP, code inspired from [codehackit](http://codehackit.blogspot.fr/2011/08/expression-parser-in-php.html)
 
 List of functionns:
 
@@ -60,3 +60,4 @@ Look at .travis.yml
 # Todo
 
 + Deal with +inf, -inf, and NaN
++ Look at how is the best way to decouple Scope
