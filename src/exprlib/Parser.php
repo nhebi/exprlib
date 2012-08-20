@@ -42,8 +42,7 @@ class Parser
      */
     public static function build($content, $precision = 15, $precisionType = PHP_ROUND_HALF_UP)
     {
-        $instance = new static();
-        $instance->setContent($content);
+        $instance = new static($content);
         $instance->precision = $precision;
         $instance->precisionType = $precisionType;
 
@@ -100,13 +99,6 @@ class Parser
         return round($this->tree->evaluate(), $this->precision, $this->precisionType);
     }
 
-    /*** accessors and mutators ***/
-
-    public function getTree()
-    {
-        return $this->tree;
-    }
-
     public function setContent($content)
     {
         $this->content = $content;
@@ -116,11 +108,6 @@ class Parser
         $this->tree = null;
 
         return $this;
-    }
-
-    public function getTokens()
-    {
-        return $this->tokens;
     }
 
     /*******************************************************

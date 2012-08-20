@@ -47,15 +47,12 @@ class Scope implements IfContext
             $context = $this->builder->getContext();
 
             if (!$context instanceof ScopeGroup) {
-                $group = new ScopeGroup();
-                $group->setBuilder($this->builder);
-
-                $this->builder->pushContext($group);
-            } else {
-                $group = $this;
+                $this->builder->pushContext(new ScopeGroup());
             }
 
-            $group->addScopeGroup($this->operations);
+            $this->builder->getContext()
+                ->addScopeGroup($this->operations);
+
             $this->operations = array();
         } elseif ($token === '(') {
             $this->builder->pushContext(new Scope($token));
@@ -64,7 +61,6 @@ class Scope implements IfContext
             $scopeOperation = $this->builder->popContext();
             $newContext     = $this->builder->getContext();
             if (is_null($scopeOperation) || (!$newContext)) {
-                # this means there are more closing parentheses than openning
                 throw new OutOfScopeException('It misses an open scope');
             }
             $newContext->addOperation($scopeOperation);
