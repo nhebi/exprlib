@@ -42,7 +42,21 @@ class Scope implements IfContext
         $token     = strtolower($token);
 
         if (in_array($token, array('*','/','+','-','^'), true)) {
-            $this->operations[] = $token;
+            $this->addOperation($token);
+        } elseif ($token === ',') {
+            $context = $this->builder->getContext();
+
+            if (!$context instanceof ScopeGroup) {
+                $group = new ScopeGroup();
+                $group->setBuilder($this->builder);
+
+                $this->builder->pushContext($group);
+            } else {
+                $group = $this;
+            }
+
+            $group->addScopeGroup($this->operations);
+            $this->operations = array();
         } elseif ($token === '(') {
             $this->builder->pushContext(new Scope($token));
         } elseif ($token === ')') {
@@ -59,6 +73,10 @@ class Scope implements IfContext
             $this->builder->pushContext(new scope\Sin($token));
         } elseif ($token === 'cos(') {
             $this->builder->pushContext(new scope\Cosin($token));
+        } elseif ($token === 'sum(') {
+            $this->builder->pushContext(new scope\Sum($token));
+        } elseif ($token === 'avg(') {
+            $this->builder->pushContext(new scope\Avg($token));
         } elseif ($token === 'tan(') {
             $this->builder->pushContext(new scope\Tangent($token));
         } elseif ($token === 'sqrt(') {
@@ -71,7 +89,7 @@ class Scope implements IfContext
             $this->builder->pushContext(new scope\Exp($token));
         } else {
             if (is_numeric($token)) {
-                $this->operations[] = (float) $token;
+                $this->addOperation((float) $token);
             } else {
                 throw new UnknownTokenException(sprintf('"%s" is not supported yet', $baseToken));
             }
@@ -129,10 +147,10 @@ class Scope implements IfContext
             } elseif ($thirdOrder) {
                 switch ($operation) {
                     case '+':
-                        $this->operations[ $i ] = (float) ($left + $right);
+                        $this->operations[$i] = (float) ($left + $right);
                         break;
                     case '-':
-                        $this->operations[ $i ] = (float) ($left - $right);
+                        $this->operations[$i] = (float) ($left - $right);
                         break;
                     default:
                         $removeSides = false;
@@ -166,7 +184,6 @@ class Scope implements IfContext
                 $this->operations[$i] = $operation->evaluate();
             }
         }
-
         $operationList = $this->operations;
 
         while (true) {
@@ -183,6 +200,5 @@ class Scope implements IfContext
                 reset($operationList = array_values($operationList));
             }
         }
-        throw new \Exception('failed... here');
     }
 }

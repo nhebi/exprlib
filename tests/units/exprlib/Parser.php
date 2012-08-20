@@ -15,7 +15,7 @@ use exprlib\Parser as ParserModel;
  */
 class Parser extends atoum\test
 {
-    public function testExceptions()
+    /*public function testExceptions()
     {
         $this->exception(function() { ParserModel::build('ß2+1')->evaluate(); })
         ->isInstanceOf('exprlib\exceptions\UnknownTokenException')
@@ -27,7 +27,7 @@ class Parser extends atoum\test
 
         $this->exception(function() { ParserModel::build('2/0')->evaluate(); })
         ->isInstanceOf('exprlib\exceptions\DivisionByZeroException');
-    }
+    }*/
 
     /**
      * @dataProvider operationsDataProvider
@@ -40,7 +40,6 @@ class Parser extends atoum\test
 
     public function operationsDataProvider()
     {
-        $pi  = M_PI;
         $pi4 = M_PI_4;
 
         return array(
@@ -69,9 +68,21 @@ class Parser extends atoum\test
             array('tan(180)', 0),
             // log
             array('log(10)', '1'),
+            array('log(10,10)', '1'),
             array('ln(10)', '2.30259'),
             array('log(0.7)', '-0.1549'),
             array('ln(0.7)', '-0.35667'),
+            // pow
+            array('pow(10, 2)', 100),
+            array('pow(10, 3)', 1000),
+            array('pow(10, 0)', 1),
+            // exp
+            array('exp(12)', 162754.79142),
+            array('exp(5.7)', 298.8674),
+            // sum
+            array('sum(10, 20, 30)', 60),
+            // avg
+            array('avg(10, 20, 30)', 20),
         );
     }
 }

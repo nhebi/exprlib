@@ -3,14 +3,16 @@
 namespace exprlib\contexts\scope;
 
 use exprlib\contexts\Scope;
+use exprlib\exceptions\ParsingException;
 
 class Exp extends Scope
 {
     public function evaluate()
     {
-        // log = log(x, $number (or 10))
-        // ln = log(x)
-        exit('ici');
-        return cos(deg2rad(parent::evaluate()));
+        if (is_array($result = parent::evaluate())) {
+            throw new ParsingException('exp accept only one argument');
+        }
+
+        return exp($result);
     }
 }
