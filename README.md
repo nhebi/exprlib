@@ -5,7 +5,7 @@ exprlib - PHP
 
 An expression parser in PHP, code inspired from [codehackit](http://codehackit.blogspot.fr/2011/08/expression-parser-in-php.html)
 
-List of functionns:
+List of functions:
 
 - operators = * + -
 - cos
