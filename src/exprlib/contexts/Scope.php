@@ -42,7 +42,7 @@ class Scope implements IfContext
         $baseToken = $token;
         $token     = strtolower($token);
 
-        if (in_array($token, $supportedOperations, true)) {
+        if (in_array($token, $this->supportedOperations, true)) {
             $this->addOperation($token);
         } elseif ($token === ',') {
             $context = $this->builder->getContext();
@@ -108,7 +108,7 @@ class Scope implements IfContext
     {
         //@todo refactorize that !
         while (list($i, $operation) = each ($this->operations)) {
-            $operators = $supportedOperations;
+            $operators = $this->supportedOperations;
             if (!in_array($operation, $operators, true)) {
                 continue;
             }
