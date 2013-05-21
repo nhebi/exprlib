@@ -63,7 +63,30 @@ class Parser
         $this->content = str_replace('**', '^', $this->content);
         $this->content = str_replace('PI', (string) PI(), $this->content);
         $this->tokens = preg_split(
-            '@([\d\.]+)|(sin\(|log\(|ln\(|pow\(|exp\(|acos\(|cos\(|sum\(|avg\(|tan\(|sqrt\(|\+|\-|\*|/|\^|\(|\))@i',
+            '@
+              ([\d\.]+)
+              |(
+                sin\(
+                |log\(
+                |ln\(
+                |pow\(
+                |exp\(
+                |acos\(
+                |cos\(
+                |sum\(
+                |avg\(
+                |tan\(
+                |sqrt\(
+                |if\(
+                |\+
+                |\-
+                |\*
+                |/
+                |\^
+                |\(
+                |\)
+              )
+            @ix',
             $this->content,
             null,
             PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY
