@@ -14,6 +14,7 @@ class Scope implements IfContext
     protected $childrenContexts = array();
     protected $content;
     protected $operations = array();
+    protected $supportedOperations = array('^','/','*','+','-','>','<','=');
 
     public function __construct($content = null)
     {
@@ -41,7 +42,7 @@ class Scope implements IfContext
         $baseToken = $token;
         $token     = strtolower($token);
 
-        if (in_array($token, array('*','/','+','-','^'), true)) {
+        if (in_array($token, $this->supportedOperations, true)) {
             $this->addOperation($token);
         } elseif ($token === ',') {
             $context = $this->builder->getContext();
@@ -83,6 +84,8 @@ class Scope implements IfContext
             $this->builder->pushContext(new scope\Log($token));
         } elseif ($token === 'pow(') {
             $this->builder->pushContext(new scope\Pow($token));
+        } elseif ($token === 'if(') {
+            $this->builder->pushContext(new scope\IfElse($token));
         } elseif ($token === 'exp(') {
             $this->builder->pushContext(new scope\Exp($token));
         } else {
@@ -105,7 +108,7 @@ class Scope implements IfContext
     {
         //@todo refactorize that !
         while (list($i, $operation) = each ($this->operations)) {
-            $operators = array('^','/','*','+','-');
+            $operators = $this->supportedOperations;
             if (!in_array($operation, $operators, true)) {
                 continue;
             }
@@ -177,6 +180,15 @@ class Scope implements IfContext
                     break;
                 case '+':
                     $result = (float) ($left + $right);
+                    break;
+                case '>':
+                    $result = ($left > $right);
+                    break;
+                case '<':
+                    $result = ($left < $right);
+                    break;
+                case '=':
+                    $result = ($left == $right);
                     break;
             }
 

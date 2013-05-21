@@ -19,6 +19,7 @@ class Parser
     protected $contextStack = array();
     protected $tree;
     protected $tokens = array();
+    protected $vars = array();
 
     /**
      * @param string $content content
@@ -63,7 +64,30 @@ class Parser
         $this->content = str_replace('**', '^', $this->content);
         $this->content = str_replace('PI', (string) PI(), $this->content);
         $this->tokens = preg_split(
-            '@([\d\.]+)|(sin\(|log\(|ln\(|pow\(|exp\(|acos\(|cos\(|sum\(|avg\(|tan\(|sqrt\(|\+|\-|\*|/|\^|\(|\))@i',
+            '@
+              ([\d\.]+)
+              |(
+                sin\(
+                |log\(
+                |ln\(
+                |pow\(
+                |exp\(
+                |acos\(
+                |cos\(
+                |sum\(
+                |avg\(
+                |tan\(
+                |sqrt\(
+                |if\(
+                |\+
+                |\-
+                |\*
+                |/
+                |\^
+                |\(
+                |\)
+              )
+            @ix',
             $this->content,
             null,
             PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY
@@ -90,8 +114,27 @@ class Parser
         return $this;
     }
 
+    public function setVars(array $vars)
+    {
+        if (count($vars)) {
+          $this->vars = array_merge($this->vars, $vars);
+        }
+
+        return $this;
+    }
+
     public function evaluate()
     {
+        if (count($this->vars)) {
+            $this->content = str_replace(array_map(function($varName) {
+              return sprintf('{{%s}}', $varName);
+            }, array_keys($this->vars)), array_values($this->vars), $this->content);
+        }
+
+        if (!$this->tokens) {
+            $this->tokenize();
+        }
+
         if (!$this->tree) {
             $this->parse();
         }
@@ -102,8 +145,8 @@ class Parser
     public function setContent($content)
     {
         $this->content = $content;
-        // tokenize the content
-        $this->tokenize();
+        // clear tokens
+        $this->tokens = array();
         // clear tree
         $this->tree = null;
 
