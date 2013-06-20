@@ -3,6 +3,8 @@ exprlib - PHP
 
 [![Build Status](https://secure.travis-ci.org/rezzza/exprlib.png)](http://travis-ci.org/rezzza/exprlib)
 
+## Look at [Hoa/Math](https://github.com/hoaproject/Math), this library is no more maintained.
+
 An expression parser in PHP, code inspired from [codehackit](http://codehackit.blogspot.fr/2011/08/expression-parser-in-php.html)
 
 List of functions and features:
