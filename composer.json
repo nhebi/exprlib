@@ -1,8 +1,8 @@
 {
-    "name": "rezzza/exprlib",
+    "name": "nhebi/exprlib",
     "keywords": ["math", "expressions"],
-    "homepage": "https://github.com/rezzza/exprlib",
-    "description": "An expression parser in PHP",
+    "homepage": "https://github.com/nhebi/exprlib",
+    "description": "An expression parser in PHP. (Fork of rezzza/exprlib)",
     "license": "MIT",
     "authors": [
         {
